@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34031.279
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ldb2MySQL", "Ldb2MySQL\Ldb2MySQL.csproj", "{760BC977-9FC6-4B24-87A4-4D46EF2FE684}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{760BC977-9FC6-4B24-87A4-4D46EF2FE684}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{760BC977-9FC6-4B24-87A4-4D46EF2FE684}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{760BC977-9FC6-4B24-87A4-4D46EF2FE684}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{760BC977-9FC6-4B24-87A4-4D46EF2FE684}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B8539F37-8415-4E9E-A40D-B3B6B875DE80}
+	EndGlobalSection
+EndGlobal
