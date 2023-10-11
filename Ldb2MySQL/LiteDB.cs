@@ -224,7 +224,7 @@ namespace X13 {
       }
       return _history.Query().Where("$.t > @0", DateTime.Now.AddDays(-14)) .OrderBy("t").ToEnumerable()
         .Select(z => new Log.LogRecord {
-          dt = z["t"].AsDateTime,
+          dt = z["t"].AsDateTime.ToLocalTime(),
           ll = (LogLevel)z["l"].AsInt32,
           format = z["m"].AsString,
           args = null
@@ -233,7 +233,7 @@ namespace X13 {
 
     public IEnumerable<ArchRecord> ArchRecords() {
       return _archive.Query().OrderBy("t").ToEnumerable()
-        .Select(z => new ArchRecord { dt = z["t"].AsDateTime, path = z["p"].AsString, value = z["v"].AsDouble });
+        .Select(z => new ArchRecord { dt = z["t"].AsDateTime.ToLocalTime(), path = z["p"].AsString, value = z["v"].AsDouble });
     }
 
     public void Dispose() {
