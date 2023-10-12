@@ -62,8 +62,8 @@ namespace X13 {
       _db = new MySqlConnection(_builder.ConnectionString);
       _db.Open();
       using(var batch = _db.CreateBatch()) {
-        batch.BatchCommands.Add(new MySqlBatchCommand("create table PS(ID int auto_increment primary key, P text not null, M text, S text);"));
-        batch.BatchCommands.Add(new MySqlBatchCommand("create table LOGS(ID int auto_increment primary key, DT datetime(3) not null, L tinyint not null, M text not null, key `LOGS_DT_IDX` (`DT`) using btree);"));
+        batch.BatchCommands.Add(new MySqlBatchCommand("create table PS(ID int auto_increment primary key, P text not null, M text, S text) default charset=utf8mb4 collate=utf8mb4_general_ci;"));
+        batch.BatchCommands.Add(new MySqlBatchCommand("create table LOGS(ID int auto_increment primary key, DT datetime(3) not null, L tinyint not null, M text not null, key `LOGS_DT_IDX` (`DT`) using btree) default charset=utf8mb4 collate=utf8mb4_general_ci;"));
         batch.BatchCommands.Add(new MySqlBatchCommand("create table ARCH(ID int not null auto_increment, P int not null, DT datetime(3) not null, V double not null, primary key (ID), key ARCH_FK (p), key ARCH_DT_IDX (DT) using btree, constraint ARCH_FK foreign key (P) references PS(ID) on delete cascade)"));
         batch.BatchCommands.Add(new MySqlBatchCommand("create table ARCH_W(P int primary key, DT1 datetime(3), constraint ARCH_W_FK foreign key (P) references PS(ID) on delete cascade);"));
         batch.BatchCommands.Add(new MySqlBatchCommand("create trigger ARCH_DATA after update on PS for each row begin if (new.S != old.S and json_value(new.M, '$.Arch.enable') and (json_type(new.S) = 'INTEGER' or json_type(new.S) = 'DOUBLE')) then insert into ARCH (P, DT, V) values (new.ID, now(3), json_value(new.S, '$')); insert ignore into ARCH_W(P) values(new.ID); end if; end"));
@@ -99,6 +99,9 @@ namespace X13 {
       if(!_idCache.TryGetValue(r.path, out long  id)) {
         Log.Debug("WriteArch({0}) no Id", r.path);
         return;
+      }
+      if(double.IsNaN(r.value) || double.IsInfinity(r.value)) {  
+        return; 
       }
       ExecuteNonQuery("insert into ARCH (P, DT, V) values (@P0, @P1, @P2);", id, r.dt, r.value);
     }
