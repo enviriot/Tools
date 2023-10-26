@@ -11,6 +11,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Policy;
 using System.IO;
 using System.Threading;
+using NiL.JS.Extensions;
 
 namespace X13 {
   internal class LiteDB : IDisposable {
@@ -51,6 +52,14 @@ namespace X13 {
       }
       return sb.ToString();
     }
+
+    private Dictionary<string, ObjectId> _base;
+    private ObjectId GetOrCreateTopicId(string path) {
+      if(_base.TryGetValue(path, out var id)) {
+        return id;
+      }
+      return ObjectId.NewObjectId();
+    }
     private BsonValue Js2Bs(JSC.JSValue val) {
       if(val == null) {
         return BsonValue.Null;
@@ -74,15 +83,9 @@ namespace X13 {
           return new BsonValue((int)val);
         case JSC.JSValueType.String: {
             var s = val.Value as string;
-            //if(s != null && s.StartsWith("¤TR")) {
-            //  var t = Topic.I.Get(Topic.root, s.Substring(3), false, null, false, false);
-            //  if(t != null) {
-            //    if(_base.TryGetValue(t, out Stash tu)) {
-            //      return tu.bm["_id"];
-            //    }
-            //  }
-            //  throw new ArgumentException("TopicRefernce(" + s.Substring(3) + ") NOT FOUND");
-            //}
+            if(s != null && s.StartsWith("¤TR")) {
+              return GetOrCreateTopicId(s.Substring(3));
+            }
             return new BsonValue(s);
           }
         case JSC.JSValueType.Object:
@@ -180,7 +183,7 @@ namespace X13 {
     private ILiteCollection<BsonDocument> _archive;
 
     public LiteDB() {
-
+      _base = new Dictionary<string, ObjectId>();
     }
     public void Open() {
       if(!File.Exists(DB_PATH)) {
@@ -211,6 +214,15 @@ namespace X13 {
       _archive = _dba.GetCollection<BsonDocument>("archive");
     }
 
+    public void Create(){
+      _db = new LiteDatabase(new ConnectionString { Upgrade = true, Filename = DB_PATH }) { CheckpointSize = 50 };
+      _objects = _db.GetCollection<BsonDocument>("objects");
+      _objects.EnsureIndex("p", true);
+      _states = _db.GetCollection<BsonDocument>("states");
+      _history = _db.GetCollection<BsonDocument>("history");
+      _history.EnsureIndex("t");
+    }
+
     public IEnumerable<Topic> Topics() {
       return _objects.FindAll().OrderBy(z => z["p"])
         .Select(z => {
@@ -218,6 +230,16 @@ namespace X13 {
           return new Topic { path = z["p"].AsString, manifest = Bs2Js(z["v"]), state = bs==null?JSC.JSValue.Undefined:Bs2Js(bs["v"]) };
         });
     }
+    public void Write(Topic t) {
+      var id = GetOrCreateTopicId(t.path);
+      var bm = new BsonDocument { ["_id"] = id, ["p"] = t.path, ["v"] = Js2Bs(t.manifest) };
+      _objects.Insert(bm);
+      if (!t.state.IsUndefined()) {
+        var bs = new BsonDocument { ["_id"] = id, ["v"] = Js2Bs(t.state) };
+        _states.Insert(bs);
+      }
+    }
+
     public IEnumerable<Log.LogRecord> LogRecords() {
       if(_history == null) {
         return new Log.LogRecord[0];
@@ -229,6 +251,15 @@ namespace X13 {
           format = z["m"].AsString,
           args = null
         });
+    }
+    public void Write(Log.LogRecord l) {
+      var d = new BsonDocument {
+        ["_id"] = ObjectId.NewObjectId(),
+        ["t"] = new BsonValue(l.dt.ToUniversalTime()),
+        ["l"] = new BsonValue((int)l.ll),
+        ["m"] = new BsonValue(l.format)
+      };
+      _history.Insert(d);
     }
 
     public IEnumerable<ArchRecord> ArchRecords() {

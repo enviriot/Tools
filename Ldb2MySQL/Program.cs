@@ -21,33 +21,56 @@ namespace X13 {
           return;
         }
         mdb = new MySQL(url);
-        mdb.Create();
+        mdb.Open();
         ldb = new LiteDB();
-        ldb.Open();
+        ldb.Create();
 
-        foreach(var t in ldb.Topics()) {
+        foreach (var t in mdb.Topics()) {
           Console.Write("\r" + t.path);
-          mdb.Write(t);
+          ldb.Write(t);
         }
         Log.Info("Topics transfer finished");
 
         Console.WriteLine();
-        foreach(var l in ldb.LogRecords()) {
+        foreach (var l in mdb.LogRecords()) {
           Console.Write("\r" + l.dt.ToString());
-          mdb.Write(l);
+          ldb.Write(l);
         }
-        Log.Info("Logs transfer finished");
-
+        Console.WriteLine();
+        mdb.ConvertArch();
+        Log.Info("Arch converted");
 
         Console.WriteLine();
-        foreach(var r in ldb.ArchRecords()) {
-          Console.Write("\r" + r.dt.ToString());
-          mdb.Write(r);
-        }
-        Log.Info("Arch transfer finished");
+        Log.Info("Logs transfer finished");
+        /*
+                mdb = new MySQL(url);
+                mdb.Create();
+                ldb = new LiteDB();
+                ldb.Open();
 
+                foreach(var t in ldb.Topics()) {
+                  Console.Write("\r" + t.path);
+                  mdb.Write(t);
+                }
+                Log.Info("Topics transfer finished");
+
+                Console.WriteLine();
+                foreach(var l in ldb.LogRecords()) {
+                  Console.Write("\r" + l.dt.ToString());
+                  mdb.Write(l);
+                }
+                Log.Info("Logs transfer finished");
+
+
+                Console.WriteLine();
+                foreach(var r in ldb.ArchRecords()) {
+                  Console.Write("\r" + r.dt.ToString());
+                  mdb.Write(r);
+                }
+                Log.Info("Arch transfer finished");
+        */
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("\n\rFinish");
+        Console.WriteLine("\n\rFinished");
       }
       catch (TaskCanceledException ) {
       
